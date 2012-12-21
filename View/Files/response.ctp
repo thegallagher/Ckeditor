@@ -1,0 +1,1 @@
+<script type="text/javascript">window.parent.CKEDITOR.tools.callFunction(<?php echo $args; ?>);</script>
