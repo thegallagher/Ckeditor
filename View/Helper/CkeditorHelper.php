@@ -1,40 +1,37 @@
 <?php
-/*
- * Adapted from http://bakery.cakephp.org/articles/wernerhp/2010/08/31/cksource-helper-for-ckeditor
- * Credit to wernerhp.
- */
 class CkeditorHelper extends FormHelper {
 
-	public $helpers = array('Html');
+	public $helpers = array('Html', 'Form');
+	protected static $_initilized = false;
 
 	public function input($field, $options = array()) {
+		$options = $this->_init($field, $options);
 		$options = $this->_initInputField($field, $options);
-		$value = null;
-		$config = null;
-		$events = null;
-
-		if (array_key_exists('value', $options)) {
-			$value = $options['value'];
-			unset($options['value']);
-		}
-		if (array_key_exists('config', $options)) {
-			$config = $options['config'];
-			unset($options['config']);
-		}
-		if (array_key_exists('events', $options)) {
-			$events = $options['events'];
-			unset($options['events']);
-		}
-
-		App::import('Vendor', 'Ckeditor.ckeditor');
-		$CKEditor = new CKEditor();
-		$CKEditor->basePath = $this->webroot . 'ckeditor/js/ckeditor/';
 		
+		$scriptOptions = array('baseHref' => $this->url('/', true));
 		$plugins = App::objects('plugin');
 		if (in_array('Uploader', $plugins)) {
-			$CKEditor->config['filebrowserUploadUrl'] = $this->webroot . 'admin/ckeditor/files/upload';
+			$scriptOptions['filebrowserUploadUrl'] = $this->webroot . 'admin/ckeditor/files/upload';
 		}
-
-		return $CKEditor->editor($options['name'], $value, $config, $events);
+		
+		$script = sprintf('CKEDITOR.replace(%s, %s);', json_encode($options['name']), json_encode($scriptOptions));
+		$this->Html->scriptBlock($script, array('inline' => false));
+		return $this->Form->input($field, $options);
 	}
+	
+	public function beforeRender($viewFile) {
+		if (!self::$_initilized) {
+			$this->Html->script('Ckeditor.ckeditor/ckeditor', array('inline' => false));
+			self::$_initilized = true;
+		}
+	}
+	
+	protected function _init($field, $options) {
+		$this->Form->setEntity($field);
+		$options = $this->Form->_name($options);
+		$options = $this->Form->value($options);
+		$options = $this->Form->domId($options);
+		return $options;
+	}
+
 }
