@@ -8,6 +8,10 @@ class CkeditorHelper extends FormHelper {
 		$options = $this->_init($field, $options);
 		$options = $this->_initInputField($field, $options);
 		
+		if (!isset($options['type'])) {
+			$options['type'] = 'textarea';
+		}
+		
 		$scriptOptions = array('baseHref' => $this->url('/', true));
 		$plugins = App::objects('plugin');
 		if (in_array('Uploader', $plugins)) {
