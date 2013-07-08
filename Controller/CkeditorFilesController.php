@@ -4,7 +4,7 @@ App::uses('AppController', 'Controller');
 App::uses('Uploader', 'Uploader.Vendor');
 App::uses('CakeEvent', 'Event');
 
-class FilesController extends AppController {
+class CkeditorFilesController extends AppController {
 
 	protected $_action;
 	protected $_isAllowed = true;

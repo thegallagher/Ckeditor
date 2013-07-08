@@ -15,7 +15,7 @@ class CkeditorHelper extends FormHelper {
 		$scriptOptions = array('baseHref' => $this->url('/', true));
 		$plugins = App::objects('plugin');
 		if (in_array('Uploader', $plugins)) {
-			$scriptOptions['filebrowserUploadUrl'] = $this->webroot . 'admin/ckeditor/files/upload';
+			$scriptOptions['filebrowserUploadUrl'] = $this->webroot . 'admin/ckeditor/ckeditor_files/upload';
 		}
 		
 		$script = sprintf('CKEDITOR.replace(%s, %s);', json_encode($options['name']), json_encode($scriptOptions));
