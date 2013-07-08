@@ -17,7 +17,7 @@ class CkeditorFilesController extends AppController {
 		$this->params['action'] = 'pre_action';
 		
 		// If the Auth component is not in use then use an alternative authorization mechanism
-		if (!$this->Components->attached('Auth')){
+		if (!$this->Components->loaded('Auth')){
 			$this->_isAllowed = false;
 			$eventName = 'FileManager.is_authorized';
 			$eventManager = $this->getEventManager();
