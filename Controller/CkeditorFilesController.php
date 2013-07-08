@@ -21,9 +21,9 @@ class CkeditorFilesController extends AppController {
 			$this->_isAllowed = false;
 			$eventName = 'FileManager.is_authorized';
 			$eventManager = $this->getEventManager();
-			$globalListners = CakeEventManager::instance()->listeners($eventName);
-			$localListners = $eventManager->listeners($eventName);
-			if (count($globalListners) || count($localListners)) {
+			$globalListeners = CakeEventManager::instance()->listeners($eventName);
+			$globalListeners = $eventManager->listeners($eventName);
+			if (count($globalListeners) || count($globalListeners)) {
 				$event = new CakeEvent($eventName, $this, true);
 				$eventManager->dispatch($event);
 				$this->_isAllowed = !$event->isStopped() && $event->result;
