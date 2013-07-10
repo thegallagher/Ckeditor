@@ -1,79 +1,65 @@
 <?php
 
 App::uses('AppController', 'Controller');
-App::uses('Uploader', 'Uploader.Vendor');
+App::uses('AwecmsUploader', 'Awecms.Lib');
 App::uses('CakeEvent', 'Event');
 
 class CkeditorFilesController extends AppController {
 
-	protected $_action;
-	protected $_isAllowed = true;
-	
+	protected $_functionNumber = null;
+
 	public function beforeFilter() {
 		parent::beforeFilter();
-		
-		// Change action so that we can check if the user is allowed in the filter phase
-		$this->_action = $this->params['action'];
-		$this->params['action'] = 'pre_action';
-		
-		// If the Auth component is not in use then use an alternative authorization mechanism
-		if (!$this->Components->loaded('Auth')){
-			$this->_isAllowed = false;
-			$eventName = 'FileManager.is_authorized';
-			$eventManager = $this->getEventManager();
+
+		if (!isset($this->request->query['CKEditorFuncNum'])) {
+			throw new BadRequestException();
+		}
+		$this->_functionNumber = $this->request->query['CKEditorFuncNum'];
+
+		$isAllowed = false;
+		if ($this->Components->loaded('Auth')) {
+			$isAllowed = $this->Auth->isAuthorized();
+		} else {
+			$eventName = 'Ckeditor.is_authorized';
 			$globalListeners = CakeEventManager::instance()->listeners($eventName);
-			$globalListeners = $eventManager->listeners($eventName);
-			if (count($globalListeners) || count($globalListeners)) {
+			$objectListeners = $this->getEventManager()->listeners($eventName);
+			if (count($globalListeners) > 0 || count($objectListeners) > 0) {
 				$event = new CakeEvent($eventName, $this, true);
-				$eventManager->dispatch($event);
-				$this->_isAllowed = !$event->isStopped() && $event->result;
+				$this->getEventManager()->dispatch($event);
+				$isAllowed = !$event->isStopped() && $event->result;
 			}
 		}
-	}
-	
-	public function pre_action() {
-		if (!$this->_isAllowed) {
-			if (!isset($this->request->query['CKEditorFuncNum'])) {
-				throw new UnauthorizedException();
-			} else {
-				$this->response->statusCode(401);
-				$funcNum = $this->request->query['CKEditorFuncNum'];
-				$this->_response($funcNum, false, __('You are not logged in. Please login then try again.'));
-			}
-		} else {
-			return $this->{$this->_action}();
+
+		if (!$isAllowed) {
+			echo $this->_respond(
+				$this->_functionNumber,
+				false,
+				__d('ckeditor', 'You are not logged in. Please login and try again.')
+			);
+			$this->_stop();
+			return false;
 		}
 	}
 	
 	public function admin_upload() {
-		if (!isset($this->request->query['CKEditorFuncNum'])) {
-			throw new BadRequestException();
-		}
-		$funcNum = $this->request->query['CKEditorFuncNum'];
-		
-		$settings = array(
-			'uploadDir' => 'img/upload/',
-			'saveAsFilename' => true,
-		);
-		$this->Uploader = new Uploader($settings);
-		$data = $this->Uploader->upload('upload');
-		if ($data) {
-			$url = Router::url($data['path']);
-			$message = 'File uploaded sucessfully.';
+		$uploader = new AwecmsUploader($this->request);
+		if ($uploader->upload('upload', 'form')) {
+			$url = $uploader->getUploadedUrl();
+			$message = __d('ckeditor', 'File uploaded successfully.');
 		} else {
 			$url = false;
-			$message = 'The file could not be uploaded.';
+			$message = $uploader->getLastErrorMessage();
 		}
-		$this->_response($funcNum, $url, __($message));
+		$this->_respond($this->_functionNumber, $url, $message);
 	}
 	
-	protected function _response() {
+	protected function _respond() {
 		$args = func_get_args();
 		$args = json_encode($args);
 		$args = trim($args, '[]');
 		$this->set('args', $args);
 		$this->layout = false;
-		$this->render('response');
+		return $this->render('response');
 	}
 	
 }
