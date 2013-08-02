@@ -40,4 +40,6 @@ CKEDITOR.editorConfig = function( config ) {
 
 	config.protectedSource.push( /<i[\s\S]*?\>/g ); //allows beginning <i> tag
 	config.protectedSource.push( /<\/i[\s\S]*?\>/g ); //allows ending </i> tag
+
+	config.extraAllowedContent = 'dl dt dd i';
 };
